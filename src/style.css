@@ -1,0 +1,212 @@
+:root {
+  --ink: #1f3b4d;
+  --yellow: #ffd93d;
+  --yellow-deep: #f2b705;
+  --blue: #2b8fd6;
+  --red: #ff4d5e;
+  --card: rgba(255, 255, 255, 0.94);
+  font-family: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #12303f;
+  color: var(--ink);
+  overscroll-behavior: none;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+#stage {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  height: min(100dvh, calc(100vw * 16 / 9));
+  width: auto;
+  max-width: 100vw;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  container-type: size;
+}
+
+#c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* 文字の大きさはゲーム画面の幅に合わせる（中の要素の cqw もゲーム画面の幅） */
+#stage { font-size: calc(min(100vw, 100dvh * 9 / 16) * 0.042); }
+
+[hidden] { display: none !important; }
+
+/* ---------- HUD ---------- */
+#hud {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  padding: 3cqw 3cqw 0;
+  display: flex; flex-direction: column; gap: 2cqw;
+  pointer-events: none;
+}
+.hud-row { display: flex; align-items: center; gap: 2.5cqw; }
+.stage-chip {
+  background: var(--ink); color: #fff; font-weight: 800;
+  border-radius: 99px; padding: 0.3em 0.8em; font-size: 0.85em;
+}
+.meter {
+  flex: 1; display: flex; align-items: center; gap: 2cqw;
+  background: var(--card); border-radius: 99px; padding: 1.4cqw 3cqw;
+  box-shadow: 0 1cqw 0 rgba(0, 0, 0, 0.12);
+}
+.meter-label { font-size: 0.8em; font-weight: 800; white-space: nowrap; }
+.bar { position: relative; flex: 1; height: 3.2cqw; background: #dde6ec; border-radius: 99px; overflow: hidden; }
+.fill { position: absolute; inset: 0 auto 0 0; width: 100%; border-radius: 99px; }
+.bladder .fill { background: linear-gradient(90deg, var(--yellow-deep), var(--yellow)); }
+.target .fill { width: 0; background: linear-gradient(90deg, #ff7a5c, var(--red)); }
+.target.on .fill { background: linear-gradient(90deg, #ffb14d, #ff4d5e); box-shadow: 0 0 2cqw #ff4d5e; }
+.target.done .fill { background: linear-gradient(90deg, #3fd18b, #22b573); }
+/* クリアしたあとに当てている間は、得点が増えているのが分かるように光らせる */
+.target.done-on .fill { box-shadow: 0 0 2cqw #3fd18b; }
+.hud-status { justify-content: space-between; padding: 0 1cqw; }
+.hud-status .lives, .hud-status .score {
+  background: var(--card); border-radius: 99px; padding: 0.15em 0.8em;
+  box-shadow: 0 1cqw 0 rgba(0, 0, 0, 0.12); font-weight: 800;
+}
+.hud-status .score { font-size: 0.85em; }
+.hud-status .score b { font-size: 1.15em; font-variant-numeric: tabular-nums; margin-right: 0.1em; }
+.lives { color: #ff4d6d; letter-spacing: 0.08em; white-space: nowrap; }
+.target b { font-size: 1.15em; min-width: 2.4em; text-align: right; font-variant-numeric: tabular-nums; }
+.target small { font-size: 0.75em; white-space: nowrap; }
+
+.icon-btn {
+  pointer-events: auto;
+  width: 10cqw; height: 10cqw; border-radius: 50%;
+  border: none; background: var(--card); color: var(--ink);
+  font-size: 1.2em; font-weight: 800; cursor: pointer;
+  box-shadow: 0 1cqw 0 rgba(0, 0, 0, 0.12);
+}
+.icon-btn.off { opacity: 0.55; text-decoration: line-through; }
+
+/* ---------- 演出 ---------- */
+#popups { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.pop {
+  position: absolute; transform: translate(-50%, -50%);
+  font-weight: 800; font-size: 1.3em; color: #fff;
+  -webkit-text-stroke: 0.6cqw var(--ink); paint-order: stroke fill;
+  animation: pop 0.75s ease-out forwards;
+  white-space: nowrap;
+}
+.pop.target { color: var(--yellow); font-size: 1.5em; }
+.pop.spill { color: #b9e3ff; font-size: 1.1em; }
+.pop.flee { color: #ff9ad0; font-size: 1.35em; }
+.pop.drip { font-size: 0.95em; }
+@keyframes pop {
+  0% { opacity: 0; transform: translate(-50%, -30%) scale(0.6) rotate(-6deg); }
+  20% { opacity: 1; transform: translate(-50%, -60%) scale(1.1) rotate(3deg); }
+  100% { opacity: 0; transform: translate(-50%, -160%) scale(1) rotate(0); }
+}
+
+#hint {
+  position: absolute; left: 50%; top: 27%;
+  transform: translateX(-50%);
+  background: rgba(31, 59, 77, 0.85); color: #fff;
+  padding: 0.6em 1.1em; border-radius: 99px; font-weight: 800; font-size: 0.95em;
+  pointer-events: none; white-space: nowrap;
+  animation: hint 1.6s ease-in-out infinite;
+}
+@keyframes hint { 50% { transform: translateX(-50%) translateY(-1.5cqw); } }
+
+#banner {
+  position: absolute; left: 0; right: 0; top: 30%;
+  text-align: center; font-weight: 800; font-size: 3em; color: var(--yellow);
+  -webkit-text-stroke: 1.2cqw var(--ink); paint-order: stroke fill;
+  pointer-events: none;
+  animation: banner 0.6s cubic-bezier(.2, 1.6, .4, 1) both, bannerOut 0.5s ease-in 2.2s forwards;
+}
+@keyframes banner { from { transform: scale(0.3); opacity: 0; } }
+@keyframes bannerOut { to { transform: translateY(-6cqw); opacity: 0; } }
+
+/* ---------- 画面 ---------- */
+.screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 5cqw; padding: 8cqw 6cqw;
+  pointer-events: none; /* 重ねた画面の上でも、音ボタンは押せるようにする */
+}
+.screen .card, .screen .btn { pointer-events: auto; }
+#hud { z-index: 2; }
+#title { background: linear-gradient(180deg, rgba(18, 48, 63, 0.15), rgba(18, 48, 63, 0.55)); justify-content: flex-end; padding-bottom: 14cqw; }
+.logo { text-align: center; margin-bottom: auto; margin-top: 14cqw; }
+.logo h1 {
+  margin: 0; font-size: 3.2em; line-height: 1.05; font-weight: 800; color: var(--yellow);
+  -webkit-text-stroke: 1.4cqw var(--ink); paint-order: stroke fill;
+  transform: rotate(-4deg);
+  text-shadow: 0 1.6cqw 0 rgba(0, 0, 0, 0.18);
+}
+.logo-sub {
+  display: inline-block; margin-bottom: 3cqw;
+  background: var(--ink); color: #fff; font-weight: 800; font-size: 0.85em;
+  padding: 0.35em 1em; border-radius: 99px;
+}
+.note { margin: 0; color: #fff; font-size: 0.75em; opacity: 0.85; }
+
+#ready { justify-content: space-between; padding-top: 27cqw; padding-bottom: 12cqw; background: linear-gradient(180deg, rgba(18, 48, 63, 0.25), transparent 45%, rgba(18, 48, 63, 0.45)); }
+#result { background: rgba(18, 48, 63, 0.45); }
+
+.card {
+  width: 100%; background: var(--card); border-radius: 5cqw; padding: 5cqw 6cqw;
+  box-shadow: 0 1.5cqw 0 rgba(0, 0, 0, 0.15); text-align: center;
+}
+.card h2 { margin: 0.1em 0 0.3em; font-size: 1.6em; }
+.card p { margin: 0.3em 0; }
+.card-stage { font-weight: 800; color: var(--blue); letter-spacing: 0.1em; }
+.tips { text-align: left; margin: 3cqw 0 0; padding-left: 1.2em; font-size: 0.8em; line-height: 1.6; }
+
+.btn {
+  pointer-events: auto;
+  border: none; border-radius: 99px; cursor: pointer;
+  font: inherit; font-weight: 800; font-size: 1.1em;
+  padding: 0.75em 2.2em; white-space: nowrap;
+  background: #fff; color: var(--ink);
+  box-shadow: 0 1.4cqw 0 rgba(0, 0, 0, 0.2);
+  transition: transform 0.08s;
+}
+.btn:active { transform: translateY(1cqw); box-shadow: 0 0.4cqw 0 rgba(0, 0, 0, 0.2); }
+.btn.primary { background: var(--yellow); }
+.btn.big { font-size: 1.5em; padding: 0.7em 2.6em; }
+.btns { display: flex; gap: 3cqw; }
+/* 2つ並ぶボタンは、文字を小さくして1行に収める */
+.btns .btn { font-size: 0.95em; padding: 0.75em 1.5em; }
+.btns .btn.big { font-size: 1.25em; padding: 0.65em 1.8em; }
+
+.stats { display: grid; grid-template-columns: auto auto; justify-content: center; gap: 1.5cqw 5cqw; margin: 3cqw 0; font-size: 0.95em; }
+.stats dt { text-align: left; }
+.stats dd { margin: 0; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+.comment { font-size: 0.85em; color: #4b6b7f; }
+
+.stage-tip { font-size: 0.8em; font-weight: 800; color: var(--blue); }
+.btn.small { font-size: 0.85em; padding: 0.55em 1.6em; }
+#ready .btns { align-items: center; }
+
+/* ---------- 通しプレイ ---------- */
+.best { margin: 0 0 3cqw; background: rgba(255, 255, 255, 0.92); color: var(--ink); font-weight: 800; font-size: 0.85em; padding: 0.4em 1.2em; border-radius: 99px; }
+.goal-line { font-weight: 800; }
+.goal-line b { font-size: 1.5em; color: var(--red); margin: 0 0.1em; }
+.run-status { display: flex; justify-content: center; gap: 4cqw; font-weight: 800; }
+.breakdown { border-top: 0.4cqw dashed #d5dde3; padding-top: 2.5cqw; margin-top: 0; font-size: 0.85em; }
+.breakdown .sum { font-size: 1.1em; font-weight: 800; }
+.breakdown dd.sum { color: var(--red); }
+.title-up { font-weight: 800; color: #fff; background: var(--red); border-radius: 99px; display: inline-block; padding: 0.3em 1em; margin: 1cqw 0; }
+#over { background: rgba(18, 48, 63, 0.6); }
+.title-label { font-size: 0.8em; color: #4b6b7f; margin-bottom: 0 !important; }
+.title-name {
+  font-size: 1.6em; font-weight: 800; color: var(--yellow); line-height: 1.25;
+  -webkit-text-stroke: 0.9cqw var(--ink); paint-order: stroke fill;
+  margin: 0.1em 0 0.3em !important;
+}

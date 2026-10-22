@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>トイレスナイパー</title>
+<meta name="description" content="男子トイレの小便器で、おしっこの的あて。勢いが落ちていく水流を追いかけて、的に当て続けよう。" />
+<meta name="theme-color" content="#2b6f8f" />
+<link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="トイレスナイパー" />
+<meta property="og:title" content="トイレスナイパー" />
+<meta property="og:description" content="男子トイレの小便器で、おしっこの的あて。勢いが落ちていく水流を追いかけて、的に当て続けよう。" />
+<meta property="og:url" content="https://game.chozo.net/toilet-sniper/" />
+<meta property="og:image" content="https://game.chozo.net/toilet-sniper/ogp.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="トイレスナイパーのタイトルと、小便器のハエを狙っているプレイ画面" />
+<meta property="og:locale" content="ja_JP" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+<div id="stage">
+  <canvas id="c"></canvas>
+
+  <div id="hud" hidden>
+    <div class="hud-row">
+      <div class="stage-chip" id="hud-stage">ST.1</div>
+      <div class="meter bladder">
+        <span class="meter-label">のこり</span>
+        <div class="bar"><div class="fill" id="bladder-fill"></div></div>
+      </div>
+      <button id="sound" class="icon-btn" aria-label="音のオン・オフ">♪</button>
+    </div>
+    <div class="meter target">
+      <span class="meter-label">命中</span>
+      <div class="bar"><div class="fill" id="target-fill"></div></div>
+      <b id="target-sec">0.0</b><small id="target-goal">/ 6秒</small>
+    </div>
+    <div class="hud-row hud-status" id="hud-status">
+      <span class="lives" id="hud-lives" aria-label="のこりライフ">♥♥♥</span>
+      <span class="score"><b id="hud-score">0</b>点</span>
+    </div>
+  </div>
+
+  <div id="popups"></div>
+  <div id="hint" hidden>上下左右にドラッグして狙おう</div>
+  <div id="banner" hidden>クリア！</div>
+
+  <section id="title" class="screen">
+    <div class="logo">
+      <span class="logo-sub">狙って当てろ！</span>
+      <h1>トイレ<br />スナイパー</h1>
+    </div>
+    <p class="best" id="title-best" hidden></p>
+    <button class="btn primary" id="btn-play">あそぶ</button>
+    <p class="note">音が出ます</p>
+  </section>
+
+  <section id="ready" class="screen" hidden>
+    <div class="card">
+      <p class="card-stage" id="ready-stage">STAGE 1</p>
+      <h2 id="ready-name">まんなかの的</h2>
+      <p id="ready-desc">便器の奥の的に当てろ！</p>
+      <p class="goal-line">合計 <b id="ready-goal">6</b>秒 当てたらクリア</p>
+      <p class="stage-tip" id="ready-tip"></p>
+      <p class="run-status"><span class="lives" id="ready-lives">♥♥♥</span><span id="ready-score">0点</span></p>
+      <ul class="tips">
+        <li>スタートで出はじめる（止められない）</li>
+        <li>勢いはだんだん弱くなる。上にドラッグして追いかけよう</li>
+        <li>長く当てるほど高得点。外にこぼすと減点</li>
+        <li>クリアに3回失敗したら終わり</li>
+      </ul>
+    </div>
+    <div class="btns">
+      <button class="btn" id="btn-quit">やめる</button>
+      <button class="btn primary big" id="btn-start">スタート</button>
+    </div>
+  </section>
+
+  <section id="result" class="screen" hidden>
+    <div class="card">
+      <p class="card-stage" id="result-stage">STAGE 1</p>
+      <h2 id="result-title">クリア！</h2>
+      <dl class="stats">
+        <dt>的に当てた時間</dt><dd id="result-hit">0.0秒</dd>
+        <dt>こぼした量</dt><dd id="result-spill">0ml</dd>
+      </dl>
+      <dl class="stats breakdown">
+        <dt>命中</dt><dd id="score-hit">+0</dd>
+        <dt>クリア</dt><dd id="score-clear">+0</dd>
+        <dt>こぼれ</dt><dd id="score-spill">-0</dd>
+        <dt class="sum">このステージ</dt><dd class="sum" id="score-stage">0点</dd>
+        <dt class="sum">合計</dt><dd class="sum" id="score-total">0点</dd>
+      </dl>
+      <p class="comment" id="result-comment"></p>
+    </div>
+    <button class="btn primary" id="btn-next" hidden>次のステージ</button>
+    <button class="btn primary" id="btn-retry" hidden>もう一回</button>
+    <button class="btn primary" id="btn-to-over" hidden>結果を見る</button>
+  </section>
+
+  <section id="over" class="screen" hidden>
+    <div class="card">
+      <h2>ゲームオーバー</h2>
+      <p class="title-label">あなたの称号</p>
+      <p class="title-name" id="over-title">はじめてのトイレ</p>
+      <dl class="stats">
+        <dt>クリアしたステージ</dt><dd id="over-cleared">0</dd>
+        <dt>合計得点</dt><dd id="over-score">0点</dd>
+        <dt>当てた時間の合計</dt><dd id="over-hit">0.0秒</dd>
+        <dt>ベスト</dt><dd id="over-best">0点</dd>
+      </dl>
+      <p class="title-up" id="over-newbest" hidden>ベスト更新！</p>
+    </div>
+    <div class="btns">
+      <button class="btn" id="btn-over-title">タイトルへ</button>
+      <button class="btn primary big" id="btn-again">もう一回</button>
+    </div>
+  </section>
+</div>
+<script type="module" src="./src/main.ts"></script>
+</body>
+</html>
